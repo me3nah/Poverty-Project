@@ -1,49 +1,89 @@
-import os
-import glob
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import skew, kurtosis
+import os
 
-# --- CONFIGURATION ---
-DATA_DIR = '.'  # Use current folder
-LISSY_PATTERN = "lissy_*.csv"
-DART_PATTERN = "dart_*.csv"
-
-# These are the expected metric pairs
+# ---- CONFIG ----
 metrics = [
-    ("dhi_median", "dart_dhi_median"),
-    ("dhi_pr", "dart_dhi_pr"),
-    ("mhi_median", "dart_mhi_median"),
-    ("mhi_pr", "dart_mhi_pr"),
+    {
+        'name': 'dhi_median',
+        'dart_file': 'dart_table_dhi_median.csv',
+        'lissy_file': 'lissy_pop_median_dhi_ppp_median_85-21.csv',
+        'dart_type': 'median',
+        'lissy_col': 'median',
+        'ylabel': 'Median DHI',
+    },
+    {
+        'name': 'dhi_pr',
+        'dart_file': 'dart_table_dhi_pr.csv',
+        'lissy_file': 'lissy_pop_median_dhi_ppp_median_85-21.csv',
+        'dart_type': 'pr',
+        'lissy_col': 'pr',
+        'ylabel': 'Poverty Rate DHI',
+    },
+    {
+        'name': 'mhi_median',
+        'dart_file': 'dart_table_mhi_median.csv',
+        'lissy_file': 'lissy_pop_median_mhi_ppp_median_85-21.csv',
+        'dart_type': 'median',
+        'lissy_col': 'median',
+        'ylabel': 'Median MHI',
+    },
+    {
+        'name': 'mhi_pr',
+        'dart_file': 'dart_table_mhi_pr.csv',
+        'lissy_file': 'lissy_pop_median_mhi_ppp_median_85-21.csv',
+        'dart_type': 'pr',
+        'lissy_col': 'pr',
+        'ylabel': 'Poverty Rate MHI',
+    },
 ]
 
-def plot_series_comparison(time, target, interest, title, ylabel, out_file):
-    plt.figure(figsize=(9, 5))
-    plt.plot(time, target, color="#0072B2", linewidth=4, alpha=0.25, label='DART (Benchmark)')
-    plt.plot(time, interest, color="#0072B2", linewidth=1.5, alpha=1, label='LISSY (Extracted)')
-    plt.title(title, fontsize=14, fontweight='bold')
-    plt.xlabel("Time/Observation Index")
+years = [str(y) for y in range(1985, 2022)]
+
+def load_dart_table(path):
+    """Load a DART table (wide format) and clean country names."""
+    dart = pd.read_csv(path)
+    dart.columns = [c.strip() for c in dart.columns]
+    if 'countries' in dart.columns:
+        dart = dart.rename(columns={'countries': 'country'})
+    dart['country'] = dart['country'].str.strip()
+    return dart
+
+def load_lissy_file(path):
+    """Load a LISSY file (long format) and clean country names."""
+    lissy = pd.read_csv(path)
+    lissy['country'] = lissy['country'].str.strip()
+    return lissy
+
+def plot_comparison(years, dart_vals, lissy_vals, country, metric, ylabel):
+    plt.figure(figsize=(10,5))
+    plt.plot(years, dart_vals, color="#0072B2", linewidth=4, alpha=0.25, label='DART (Benchmark)')
+    plt.plot(years, lissy_vals, color="#0072B2", linewidth=1.5, alpha=1, label='LISSY (Extracted)')
+    plt.title(f"{ylabel} for {country}: LISSY vs DART")
+    plt.xlabel("Year")
     plt.ylabel(ylabel)
     plt.legend()
     plt.tight_layout()
-    plt.savefig(out_file)
+    fname = f"{country}_{metric}_comparison.png".replace(" ", "_")
+    plt.savefig(fname)
     plt.close()
+    return fname
 
-def plot_error_distribution(errors, title, out_file):
-    plt.figure(figsize=(7, 4))
-    sns.histplot(errors, bins=30, color="#0072B2", kde=True)
-    plt.title(title, fontsize=12, fontweight='bold')
+def plot_error_distribution(errors, country, metric, ylabel):
+    plt.figure(figsize=(7,4))
+    sns.histplot(errors, bins=15, color="#0072B2", kde=True)
+    plt.title(f"Absolute Relative Error Distribution: {ylabel} for {country}")
     plt.xlabel("Absolute Relative Error")
     plt.ylabel("Frequency")
     plt.tight_layout()
-    plt.savefig(out_file)
+    err_fname = f"{country}_{metric}_error_dist.png".replace(" ", "_")
+    plt.savefig(err_fname)
     plt.close()
+    return err_fname
 
-def absolute_relative_error(target, interest):
-    return (target - interest).abs() / target.abs()
-
-def save_moments(errors, out_file):
+def save_moments(errors, country, metric):
     moments = {
         "mean": errors.mean(),
         "variance": errors.var(),
@@ -53,39 +93,50 @@ def save_moments(errors, out_file):
         "max": errors.max(),
         "count": errors.count()
     }
-    with open(out_file, "w") as f:
+    txt_fname = f"{country}_{metric}_error_moments.txt".replace(" ", "_")
+    with open(txt_fname, "w") as f:
         for k, v in moments.items():
             f.write(f"{k}: {v}\n")
+    return txt_fname
 
-if __name__ == "__main__":
-    for lissy_name, dart_name in metrics:
-        lissy_file = glob.glob(os.path.join(DATA_DIR, f"{lissy_name}.csv"))
-        dart_file = glob.glob(os.path.join(DATA_DIR, f"{dart_name}.csv"))
-        if not (lissy_file and dart_file):
-            print(f"Skipping {lissy_name}/{dart_name}: files not found.")
+for metric in metrics:
+    print(f"\nProcessing {metric['name']}...")
+    dart = load_dart_table(metric['dart_file'])
+    lissy = load_lissy_file(metric['lissy_file'])
+
+    for country in dart['country'].unique():
+        dart_row = dart[dart['country'] == country]
+        lissy_rows = lissy[lissy['country'] == country]
+        dart_vals = []
+        lissy_vals = []
+        valid_years = []
+        for year in years:
+            if year in dart_row.columns:
+                dart_val = dart_row[year].values[0]
+                lissy_row = lissy_rows[lissy_rows['year'] == int(year)]
+                if not lissy_row.empty:
+                    lissy_val = lissy_row[metric['lissy_col']].values[0]
+                    # Only add if both values are numbers
+                    if pd.notnull(dart_val) and pd.notnull(lissy_val):
+                        dart_vals.append(float(dart_val))
+                        lissy_vals.append(float(lissy_val))
+                        valid_years.append(int(year))
+        if not dart_vals or not lissy_vals:
+            print(f"Skipping {country} for {metric['name']} (no overlap)")
             continue
 
-        lissy_df = pd.read_csv(lissy_file[0])
-        dart_df = pd.read_csv(dart_file[0])
+        # Plot comparison
+        cmp_plot = plot_comparison(valid_years, dart_vals, lissy_vals, country, metric['name'], metric['ylabel'])
 
-        time = lissy_df['Time']
-        lissy_values = lissy_df['Value']
-        dart_values = dart_df['Value']
+        # Error distribution
+        dart_series = pd.Series(dart_vals, dtype=float)
+        lissy_series = pd.Series(lissy_vals, dtype=float)
+        abs_rel_error = (dart_series - lissy_series).abs() / dart_series.abs()
+        err_plot = plot_error_distribution(abs_rel_error, country, metric['name'], metric['ylabel'])
 
-        graph_title = f"{lissy_name.replace('_', ' ').upper()} vs DART"
-        ylabel = lissy_name.split('_')[1].capitalize()
-        out_graph = f"comparison_{lissy_name}_vs_{dart_name}.png"
-        plot_series_comparison(time, dart_values, lissy_values, graph_title, ylabel, out_graph)
+        # Save moments
+        moments_txt = save_moments(abs_rel_error, country, metric['name'])
 
-        errors = absolute_relative_error(dart_values, lissy_values)
-        error_title = f"Distribution of Absolute Relative Errors: {lissy_name.replace('_', ' ').upper()}"
-        out_error = f"error_distribution_{lissy_name}_vs_{dart_name}.png"
-        plot_error_distribution(errors, error_title, out_error)
+        print(f"Saved {cmp_plot}, {err_plot}, {moments_txt}")
 
-        # Save moments to txt
-        moments_txt = f"moments_{lissy_name}_vs_{dart_name}.txt"
-        save_moments(errors, moments_txt)
-
-        print(f"Saved: {out_graph}, {out_error}, {moments_txt}")
-
-    print("All graphs, distributions, and summary txt files saved.")
+print("\nAll done!")
