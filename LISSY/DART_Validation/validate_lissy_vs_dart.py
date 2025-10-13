@@ -7,7 +7,7 @@ import os
 metrics = [
     {
         'name': 'dhi_median',
-        'dart_file': 'dart-table_dhi_median.csv',
+        'dart_file': 'dart_table_dhi_median.csv',
         'lissy_file': 'lissy_pop_median_dhi_ppp_median_85-21.csv',
         'dart_type': 'median',
         'lissy_col': 'median',
@@ -15,7 +15,7 @@ metrics = [
     },
     {
         'name': 'dhi_pr',
-        'dart_file': 'dart-table_dhi_pr.csv',
+        'dart_file': 'dart_table_dhi_pr.csv',
         'lissy_file': 'lissy_pop_median_dhi_ppp_median_85-21.csv',
         'dart_type': 'pr',
         'lissy_col': 'pr',
@@ -23,7 +23,7 @@ metrics = [
     },
     {
         'name': 'mhi_median',
-        'dart_file': 'dart-table_mhi_median.csv',
+        'dart_file': 'dart_table_mhi_median.csv',
         'lissy_file': 'lissy_pop_median_mhi_ppp_median_85-21.csv',
         'dart_type': 'median',
         'lissy_col': 'median',
@@ -31,7 +31,7 @@ metrics = [
     },
     {
         'name': 'mhi_pr',
-        'dart_file': 'dart-table_mhi_pr.csv',
+        'dart_file': 'dart_table_mhi_pr.csv',
         'lissy_file': 'lissy_pop_median_mhi_ppp_median_85-21.csv',
         'dart_type': 'pr',
         'lissy_col': 'pr',
