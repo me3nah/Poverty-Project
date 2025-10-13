@@ -1,6 +1,5 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 from scipy.stats import skew, kurtosis
 import os
 
@@ -71,18 +70,6 @@ def plot_comparison_all_countries(years, dart_data, lissy_data, metric, ylabel):
     plt.close()
     return fname
 
-def plot_error_distribution(errors, country, metric, ylabel):
-    plt.figure(figsize=(7,4))
-    sns.histplot(errors, bins=15, color="#0072B2", kde=True)
-    plt.title(f"Absolute Relative Error Distribution: {ylabel} for {country}")
-    plt.xlabel("Absolute Relative Error")
-    plt.ylabel("Frequency")
-    plt.tight_layout()
-    err_fname = f"{country}_{metric}_error_dist.png".replace(" ", "_")
-    plt.savefig(err_fname)
-    plt.close()
-    return err_fname
-
 def get_error_moments(errors):
     return {
         "mean": errors.mean(),
@@ -136,15 +123,7 @@ for metric in metrics:
             dart_series = pd.Series(dart_vals, dtype=float)
             lissy_series = pd.Series(lissy_vals, dtype=float)
             abs_rel_error = (dart_series - lissy_series).abs() / dart_series.abs()
-            error_moments = get_error_moments(abs_rel_error)
-            error_moments_dict[country] = error_moments
-            # Save error distribution plot
-            plot_error_distribution(abs_rel_error, country, metric['name'], metric['ylabel'])
-            # Save txt file for this country
-            txt_fname = f"{country}_{metric['name']}_error_moments.txt".replace(" ", "_")
-            with open(txt_fname, "w") as f:
-                for k, v in error_moments.items():
-                    f.write(f"{k}: {v}\n")
+            error_moments_dict[country] = get_error_moments(abs_rel_error)
 
     # Plot all countries on one compare graph
     if dart_data and lissy_data:
@@ -152,7 +131,7 @@ for metric in metrics:
         print(f"Saved {cmp_plot}")
 
     # Save CSV of error moments (moments x countries)
-    error_moments_df = pd.DataFrame(error_moments_dict).T.transpose()
+    error_moments_df = pd.DataFrame(error_moments_dict)
     error_moments_csv = f"{metric['name']}_error_moments_by_country.csv"
     error_moments_df.to_csv(error_moments_csv)
     print(f"Saved {error_moments_csv}")
