@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.stats import skew, kurtosis
 import os
+import matplotlib.cm as cm
 
 metrics = [
     {
@@ -39,6 +40,7 @@ metrics = [
 ]
 
 years = [str(y) for y in range(1985, 2022)]
+years_short = [y[-2:] for y in years]  # ['85', '86', ..., '21']
 
 def load_dart_table(path):
     dart = pd.read_csv(path)
@@ -53,13 +55,52 @@ def load_lissy_file(path):
     lissy['country'] = lissy['country'].str.strip()
     return lissy
 
+def get_country_colors(countries):
+    """
+    Assigns colors to countries with custom logic:
+    - US is blue
+    - CA is green
+    - UK is orange
+    - Germany is red
+    - All other countries get colors from tab20 colormap, skipping first 4 indices.
+    """
+    color_map = {}
+    # Explicit colors (matplotlib RGBA)
+    us_blue    = (0.121, 0.466, 0.705, 1.0)   # US (blue, tab10[0])
+    ca_green   = (0.172, 0.627, 0.172, 1.0)   # CA (green, tab10[2])
+    uk_orange  = (1.0,   0.498, 0.054, 1.0)   # UK (orange, tab10[1])
+    de_red     = (0.839, 0.153, 0.157, 1.0)   # Germany (red, tab10[3])
+
+    for country in countries:
+        cu = country.upper()
+        if cu in ['US', 'USA', 'UNITED STATES']:
+            color_map[country] = us_blue
+        elif cu in ['CA', 'CANADA']:
+            color_map[country] = ca_green
+        elif cu in ['UK', 'GB', 'UNITED KINGDOM']:
+            color_map[country] = uk_orange
+        elif cu in ['DE', 'GERMANY']:
+            color_map[country] = de_red
+
+    # Assign remaining colors from tab20 colormap, skipping 0-3 (already used)
+    cmap = cm.get_cmap('tab20', len(countries) + 4)
+    idx = 0
+    for country in countries:
+        if country not in color_map:
+            color_map[country] = cmap(idx + 4)
+            idx += 1
+    return color_map
+
 def plot_comparison_all_countries(years, dart_data, lissy_data, metric, ylabel):
     plt.figure(figsize=(14,7))
-    for country in dart_data:
+    countries = list(dart_data.keys())
+    color_map = get_country_colors(countries)
+    for country in countries:
+        color = color_map[country]
         # DART line: background, thick and faded
-        plt.plot(years, dart_data[country], color="#0072B2", linewidth=8, alpha=0.12)
-        # LISSY line: thin, solid
-        plt.plot(years, lissy_data[country], linewidth=2, alpha=1, label=f"LISSY {country}")
+        plt.plot(years_short, dart_data[country], color=color, linewidth=8, alpha=0.12)
+        # LISSY line: thin, solid, same color
+        plt.plot(years_short, lissy_data[country], color=color, linewidth=2, alpha=1, label=f"LISSY {country}")
     plt.title(f"{ylabel}: LISSY vs DART (All Countries)")
     plt.xlabel("Year")
     plt.ylabel(ylabel)
