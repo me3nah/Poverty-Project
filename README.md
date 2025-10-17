@@ -11,6 +11,22 @@ This project, undertaken in collaboration with Dr. Miles Corak, examines the pro
 * **Analyze Poverty Trends:** Conduct in-depth, cross-national analyses of poverty trends, drawing on the harmonized LIS microdata.
 * **Evaluate Policy Impacts:** Assess the impact of various social and economic policies on poverty, using our standardized dataset to draw meaningful comparisons.
 
+## Repository Structure
+
+This repository contains several key folders with important resources and documentation:
+
+### [DART](./DART)
+Contains Data Analysis and Reproducibility Toolkit files, including validation scripts, methodological notes, and visualization outputs. DART provides tools for analyzing income indicators and generating cross-national comparisons of poverty metrics.
+
+### [LISSY](./LISSY)
+Contains comprehensive documentation and tutorials for working with the LISSY remote-execution system. LISSY allows researchers to access LIS and LWS microdata securely from remote locations. This folder includes:
+- Tutorial materials for getting started with LISSY
+- Code examples in R, SAS, SPSS, and Stata
+- Best practices for LISSY job submission
+
+### [Data Availability Visuals](./analysis/data-availability/visuals)
+Contains tools and outputs for visualizing data availability across countries and years. These heatmaps show which countries have data available for specific time periods, helping researchers identify gaps and opportunities for cross-national analysis.
+
 ## Methodology
 
 TBD
