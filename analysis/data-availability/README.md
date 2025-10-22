@@ -31,7 +31,7 @@ with columns:
 A consolidated summary is generated at:
 - analysis/data-availability/summary.md
 
-## How to run
+## Quick start
 
 From repository root:
 
@@ -42,12 +42,31 @@ pip install -r analysis/data-availability/requirements.txt
 python analysis/data-availability/run.py
 ```
 
-Results will be written to analysis/data-availability/results/, multi-row CSVs to analysis/data-availability/results/multiple-rows/, and a summary to analysis/data-availability/summary.md.
+**Outputs** (gitignored - regenerate locally):
+- `analysis/data-availability/results/*.json` - Algorithm results
+- `analysis/data-availability/results/multiple-rows/*.csv` - Multi-row algorithm outputs
+- `analysis/data-availability/summary.md` - Consolidated summary
+
+**GitHub Actions:** Workflow available at `.github/workflows/data-availability-analysis.yml`
 
 ## Algorithms
 
-- Greedy longest-streak (Phase 1): Sort countries by their longest consecutive-ones streak p_k^m. Start with the largest p^u and collect countries whose p_k^m exactly equals p^u. On the first non-match, record the row and shrink p^u by intersecting with the new country's p_k^m. Repeat. Phase 2 repeats on the dataset with the Phase 1 first-row countries removed.
-- Greedy pivot coverage: Same mechanics as above, but each recorded pivot interval includes all countries that fully cover the interval (not only those whose longest streak equals it).
-- Best consecutive window: Searches all year intervals [l, r] and picks the interval with the largest number of fully covered countries (ties broken by longer interval).
-- Fixed L-year windows: Picks the best L-year moving window overall; offset-restricted variants limit start positions to l % L in {offset}.
-- Max biclique: Exact backtracking search to find an arbitrary set of years and countries forming a full rectangle of ones, maximizing area (num_countries × length). Limited by a small time budget with pruning.
+- **Greedy longest-streak (Phase 1):** Sort countries by longest consecutive-ones streak. Start with largest and collect matching countries. On mismatch, record row and shrink. Phase 2 repeats with Phase 1 first-row countries removed.
+- **Greedy pivot coverage:** Same mechanics, but records all countries covering the pivot interval (not just those with matching longest streak).
+- **Best consecutive window:** Searches all year intervals `[l, r]` for maximum country coverage (ties broken by longer interval).
+- **Fixed L-year windows:** Best L-year moving window; offset-restricted variants limit start positions.
+- **Max biclique:** Exact backtracking search for arbitrary year sets maximizing `num_countries × length` (time-limited with pruning).
+
+## Conventions
+
+- Input CSV must have `countries` column + year columns (4-digit years)
+- Outputs are JSON/CSV format
+- Large result files are gitignored (see `.gitignore`)
+
+## Privacy & Secrets
+
+No sensitive data - analysis uses publicly available DART aggregated tables.
+
+## Maintainers
+
+Analytical module for finding optimal cross-country longitudinal panels.
