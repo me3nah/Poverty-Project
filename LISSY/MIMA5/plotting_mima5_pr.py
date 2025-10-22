@@ -7,8 +7,8 @@ Reads the two CSV files in the current working directory:
  - lissy_mima5_mhi_50pr.csv
 
 Creates 4 plots (each plot contains the 4 countries in the same axis):
-  1) Poverty rate (pr) for dhi  (saved as pr_mima5_dhi_50pp.png)
-  2) Poverty rate (pr) for mhi  (saved as pr_mima5_mhi_50pp.png)
+  1) Poverty rate (pr) for dhi  (saved as mima5_dhi_50pp_pr.png)
+  2) Poverty rate (pr) for mhi  (saved as mima5_mhi_50pp_pr.png)
   3) mima5_dhi over time       (saved as mima5_dhi.png)
   4) mima5_mhi over time       (saved as mima5_mhi.png)
 
@@ -35,8 +35,8 @@ FILE_DHI = Path("lissy_mima5_dhi_50pr.csv")
 FILE_MHI = Path("lissy_mima5_mhi_50pr.csv")
 
 # Output filenames (as requested)
-OUT_PR_DHI = "pr_mima5_dhi_50pp.png"
-OUT_PR_MHI = "pr_mima5_mhi_50pp.png"
+OUT_PR_DHI = "mima5_dhi_50pp_pr.png"
+OUT_PR_MHI = "mima5_mhi_50pp_pr.png"
 OUT_MIMA5_DHI = "mima5_dhi.png"
 OUT_MIMA5_MHI = "mima5_mhi.png"
 
