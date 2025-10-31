@@ -37,3 +37,7 @@ plot_country_smoothed('Germany', '../visuals/germany_meal_affordability_smoothed
 plot_country_smoothed('UK', '../visuals/uk_meal_affordability_smoothed.png')
 
 print("Plots generated successfully in the 'visuals' folder.")
+
+plt.show()
+python analysis/food-insecurity/scripts/generate_plots.py
+
